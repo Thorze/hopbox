@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#26C6DA"/><stop offset="1" stop-color="#9FE3D4"/></linearGradient></defs>
+  <rect width="108" height="108" rx="24" fill="url(#bg)"/>
+  <path d="M35.00,86.00a19.00,5.50 0 1,0 38.00,0a19.00,5.50 0 1,0 -38.00,0Z" fill="#00594F" fill-opacity="0.22"/>
+  <g transform="rotate(-10 54 48)">
+    <path d="M31.00,34.00L54.00,47.27L54.00,73.72L31.00,60.45Z" fill="#D16438"/>
+    <path d="M54.00,47.27L77.00,34.00L77.00,60.45L54.00,73.72Z" fill="#9E4B2A"/>
+    <path d="M54.00,20.73L77.00,34.00L54.00,47.27L31.00,34.00Z" fill="#FF864B"/>
+    <path d="M44.34,32.67a7.36,2.92 0 1,0 14.72,0a7.36,2.92 0 1,0 -14.72,0Z" fill="#FFFFFF" fill-opacity="0.45"/>
+    <path d="M35.37,49.36a2.99,3.45 0 1,0 5.98,0a2.99,3.45 0 1,0 -5.98,0Z" fill="#FFFFFF"/>
+    <path d="M37.67,49.82a1.50,1.50 0 1,0 2.99,0a1.50,1.50 0 1,0 -2.99,0Z" fill="#1B1B1B"/>
+    <path d="M43.65,54.13a2.99,3.45 0 1,0 5.98,0a2.99,3.45 0 1,0 -5.98,0Z" fill="#FFFFFF"/>
+    <path d="M45.95,54.59a1.50,1.50 0 1,0 2.99,0a1.50,1.50 0 1,0 -2.99,0Z" fill="#1B1B1B"/>
+  </g>
+</svg>
