@@ -1,0 +1,235 @@
+'use strict';
+// Barre du haut, fin de partie, pause et réglages (équivalent de Menus.kt).
+
+function canAffordSomething() {
+  return Skins.items.some((it) => it.isShop && !profile.owns(it) && profile.coins >= it.price)
+    || Skins.tints.some((t) => !profile.ownsTint(t) && profile.coins >= t.price);
+}
+
+/** Version web : le classement utilise toujours le pseudo choisi dans le jeu. */
+function myName() { return profile.pseudo; }
+
+/** Pastille « ⚡ 3/5  12:34 » (prochaine énergie), même style que celle des pièces, hauteur [ph], largeur [pw]. */
+function drawEnergyPill(canvas, x, cy, ph, pw) {
+  const now = Energy.now(), e = Energy.get(now);
+  const text = `${e}/${Energy.MAX}`, timer = e < Energy.MAX ? Energy.format(Energy.secondsToNext(now)) : '';
+  const face = new RectF(x, cy - ph / 2, x + pw, cy + ph / 2);
+  const down = isPressed(face) ? ph * 0.07 : 0;
+  reliefPaint.color = Color.argb(150, 60, 66, 84);
+  rect.set(face.left, face.top + ph * 0.1, face.right, face.bottom + ph * 0.1);
+  canvas.drawRoundRect(rect, ph / 2, ph / 2, reliefPaint);
+  rect.set(face.left, face.top + down, face.right, face.bottom + down);
+  reliefPaint.color = Color.argb(205, 232, 236, 244);
+  canvas.drawRoundRect(rect, ph / 2, ph / 2, reliefPaint);
+  progStroke.color = Color.argb(220, 255, 255, 255); progStroke.strokeWidth = w * 0.004;
+  canvas.drawRoundRect(rect, ph / 2, ph / 2, progStroke);
+  drawBigBolt(canvas, face.left + ph * 0.24, face.top + down + ph * 0.13, ph * 0.48, ph * 0.74);
+  progText.textAlign = Align.LEFT;
+  progText.textSize = ph * 0.46; progText.color = Color.parseColor('#2E3A59');
+  const tx = face.left + ph * 0.85;
+  canvas.drawText(text, tx, cy + down + ph * 0.16, progText);
+  if (timer) {
+    const tx2 = tx + progText.measureText(text) + ph * 0.18;
+    progText.textSize = ph * 0.33; progText.color = Color.parseColor('#6B7590');
+    canvas.drawText(fitText(timer, progText, face.right - ph * 0.25 - tx2), tx2, cy + down + ph * 0.12, progText);
+  }
+  progText.textAlign = Align.CENTER; progText.color = Color.WHITE;
+  buttons.push({ rect: face, action: () => { openCustomize(); custEnergy = true; progScroll = 0; } });
+}
+
+// Pièces gagnées qui volent jusqu'au total en haut à droite, puis le total qui monte avec des « + » qui pulsent
+const GO_FLY_T = 0.55, GO_FLY_DUR = 0.45, GO_COUNT_T = 0.9, GO_COUNT_DUR = 0.55;
+let goFxPrev = 0;
+
+function drawGameOver(canvas) {
+  canvas.drawRect(0, 0, w, h, overlayPaint);
+  const earned = coinsThisRun, cq = clamp((gameOverTime - GO_COUNT_T) / GO_COUNT_DUR, 0, 1);
+  const shown = earned > 0 ? profile.coins - Math.round(earned * (1 - cq)) : profile.coins;
+  const bump = earned > 0 && gameOverTime > GO_COUNT_T ? Math.max(0, Math.sin(Math.min(1, (gameOverTime - GO_COUNT_T) / (GO_COUNT_DUR + 0.25)) * Math.PI)) : 0;
+  const coinRect = drawTopBar(canvas, shown, bump);
+  // Sur petit écran, on descend un peu l'ensemble pour que la raison de la défaite ne touche pas la barre du haut
+  const y0 = Math.max(insetTop + (ub() - insetTop) * 0.3, gameOverReason ? insetTop + w * (newBest ? 0.57 : 0.43) : 0);
+  if (gameOverReason) { textPaint.textSize = w * 0.045; canvas.drawText(fitText(gameOverReason, textPaint, w * 0.9), w / 2, y0 - w * (newBest ? 0.28 : 0.16), textPaint); }
+  // Carte du score, avec le ruban « Perdu ! » collé dessus (doré + couronne si nouveau record)
+  const pop = clamp(gameOverTime / 0.35, 0, 1);
+  const card = new RectF(w * 0.1, y0 - w * 0.03, w * 0.9, y0 + w * 0.38);
+  progPaint.shader = null; progPaint.color = Color.argb(70, 0, 0, 0);
+  canvas.drawRoundRect(new RectF(card.left, card.top + w * 0.015, card.right, card.bottom + w * 0.015), w * 0.05, w * 0.05, progPaint);
+  progPaint.color = Color.argb(240, 255, 255, 255); canvas.drawRoundRect(card, w * 0.05, w * 0.05, progPaint);
+  greyTextPaint.textAlign = Align.CENTER; greyTextPaint.textSize = w * 0.042;
+  // « Score » + le nombre, centrés dans la partie blanche visible (sous le ruban, au-dessus de l'onglet de partage)
+  canvas.drawText(tr('over.score_label'), w / 2, card.top + w * 0.118, greyTextPaint);
+  darkTextPaint.textAlign = Align.CENTER; darkTextPaint.textSize = w * 0.19 * (1.4 - 0.4 * pop);
+  darkTextPaint.alpha = Math.round(255 * pop);
+  canvas.drawText(fitText(String(score), darkTextPaint, card.width() - w * 0.04), w / 2, card.top + w * 0.282, darkTextPaint);
+  darkTextPaint.alpha = 255;
+  const ribbonY = card.top - w * 0.02;
+  if (newBest) drawCrown(canvas, w / 2, ribbonY - w * 0.06 + Math.sin(gameOverTime * 3) * w * 0.008, w * 0.13);
+  drawTitleRibbon(canvas, w / 2, ribbonY, tr('over.title'), Color.parseColor(newBest ? '#FF9F1C' : '#7B5CF0'), w * 0.075, w * 0.74);
+  // « Partage tes exploits » : onglet bleu calé dans le coin bas droit de la carte
+  // Onglets dans les coins bas de la carte : « Ralenti de la mort » à gauche (si saut raté), « Partage tes exploits » à droite
+  if (gameOverTime > 0.6 && deathSnap) {
+    // Les deux onglets se touchent : bande pleine en bas de la carte, partagée selon la longueur des textes
+    progText.textSize = w * 0.032;
+    const a = progText.measureText('🎬 ' + tr('death.title')) + w * 0.06, b = progText.measureText(tr('over.share')) + w * 0.11;
+    const split = card.left + card.width() * a / (a + b);
+    drawDeathPill(canvas, card.left, card.bottom, w * 0.05, () => openDeathReplay(), split);
+    drawSharePill(canvas, card.right, card.bottom, w * 0.05, () => shareScore(), split);
+  } else if (gameOverTime > 0.6) drawSharePill(canvas, card.right, card.bottom, w * 0.05, () => shareScore());
+  let y = card.bottom + w * 0.11;
+  // Record perso (ou badge « nouveau record »), centré ; les pièces gagnées partent vers le total en haut
+  const recY = y;
+  progText.textSize = w * 0.042; textPaint.textSize = w * 0.05;
+  const t = newBest ? '👑 ' + tr('over.new_record') : tr('over.personal_record', { n: best });
+  if (newBest) {
+    const lw = progText.measureText(t) + w * 0.08;
+    rect.set(w / 2 - lw / 2, y - w * 0.06, w / 2 + lw / 2, y + w * 0.03);
+    progPaint.color = Color.parseColor('#C77700');
+    canvas.drawRoundRect(new RectF(rect.left, rect.top + w * 0.01, rect.right, rect.bottom + w * 0.01), w * 0.045, w * 0.045, progPaint);
+    progPaint.color = Color.parseColor('#FFC93C'); canvas.drawRoundRect(rect, w * 0.045, w * 0.045, progPaint);
+    progText.color = Color.parseColor('#2E3A59'); canvas.drawText(t, w / 2, y, progText);
+    progText.color = Color.WHITE;
+  } else canvas.drawText(t, w / 2, y, textPaint);
+  y += w * 0.09;
+  if (unlockedLabels.length) {
+    textPaint.textSize = w * 0.042;
+    canvas.drawText(fitText(tr('over.unlocked', { items: unlockedLabels.join(', ') }), textPaint, w * 0.92), w / 2, y, textPaint);
+    y += w * 0.05;
+  }
+  // Placement qui s'adapte : l'objectif sous le contenu (pièces, déblocages) sur les petits écrans,
+  // et « Rejouer » en dessous de l'objectif
+  const goalY = y + w * 0.05, replayY = Math.max(ub() - w * 0.27, goalY + w * 0.185);
+  // Le prochain objectif, pour donner envie de rejouer (objet de boutique : toucher = l'ouvrir)
+  if (gameOverTime > 0.35) {
+    if (overGoal === null) overGoal = nextGoal();
+    const a = clamp((gameOverTime - 0.35) / 0.3, 0, 1), gy = goalY;
+    progText.textSize = w * 0.04;
+    const text = fitText('🎯 ' + overGoal, progText, w * 0.8), gw = progText.measureText(text) + w * 0.09;
+    rect.set(w / 2 - gw / 2, gy - w * 0.055, w / 2 + gw / 2, gy + w * 0.055);
+    progPaint.color = Color.argb(Math.round(235 * a), 255, 255, 255);
+    canvas.drawRoundRect(rect, w * 0.055, w * 0.055, progPaint);
+    progText.color = Color.parseColor('#2E3A59'); progText.alpha = Math.round(255 * a);
+    canvas.drawText(text, w / 2, gy + w * 0.014, progText);
+    progText.alpha = 255; progText.color = Color.WHITE;
+    if (overGoalItem) {
+      const item = overGoalItem;
+      if (a >= 1) buttons.push({ rect: new RectF(rect.left, rect.top, rect.right, rect.bottom), action: () => openShopAt(item) });
+    }
+  }
+  // Gros bouton vert « Rejouer », sur toute la largeur
+  if (gameOverTime > 0.6) {
+    const pulse = 1 + 0.02 * Math.sin(gameOverTime * 5);
+    const bw = w * 0.42 * pulse, bh = w * 0.085 * pulse, cy = replayY;
+    drawButton(canvas, new RectF(w / 2 - bw, cy - bh, w / 2 + bw, cy + bh), '▶ ' + tr('over.replay'), primaryBtnPaint, w * 0.07, () => replay());
+  }
+  drawGameOverCoinFx(canvas, earned, coinRect, recY);
+}
+
+/** Pièces qui volent du milieu de l'écran jusqu'au total, puis « + » qui pulsent autour et « +24 » qui monte. */
+function drawGameOverCoinFx(canvas, earned, r, fromY) {
+  const t = gameOverTime, prev = goFxPrev; goFxPrev = t;
+  if (earned <= 0 || !r) return;
+  const tx = r.left + r.height() * 0.5, ty = r.centerY(), fx = w / 2, fy = fromY - w * 0.02;
+  const n = Math.min(8, Math.max(3, earned));
+  for (let i = 0; i < n; i++) {
+    const t0 = GO_FLY_T + i * 0.04, q = (t - t0) / GO_FLY_DUR;
+    if (prev < t0 + GO_FLY_DUR && t >= t0 + GO_FLY_DUR && i % 2 === 0) sounds.play('COIN', 0.35, 1 + i * 0.05);
+    if (q <= 0 || q >= 1) continue;
+    const e = q * q, x = fx + (tx - fx) * e + Math.sin(q * Math.PI) * w * 0.08 * (i % 2 ? 1 : -1), y = fy + (ty - fy) * e - Math.sin(q * Math.PI) * w * 0.12;
+    progText.textSize = w * (0.06 - 0.02 * q); progText.color = Color.WHITE;
+    canvas.drawText('🪙', x, y + w * 0.02, progText);
+  }
+  // « + » qui pulsent partout autour du total pendant qu'il monte
+  const pq = (t - GO_COUNT_T) / (GO_COUNT_DUR + 0.45);
+  if (pq > 0 && pq < 1) {
+    const cx = r.centerX(), cy = r.centerY();
+    for (let i = 0; i < 10; i++) {
+      const a = i * 0.628 + 0.3, d = r.width() * (0.45 + 0.25 * ((i * 7) % 3) / 2) + w * 0.03 * pq;
+      const pulse = Math.abs(Math.sin(t * 12 + i * 1.3)), alpha = Math.round(255 * Math.min(1, (1 - pq) * 2));
+      const x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d * 0.55 + w * 0.01;
+      progText.textSize = w * (0.035 + 0.025 * pulse); progText.color = Color.argb(alpha, 255, 214, 60);
+      progText.setShadowLayer(w * 0.006, 0, w * 0.003, Color.argb(Math.round(alpha * 0.7), 120, 70, 0));
+      canvas.drawText('+', x, y, progText);
+    }
+    progText.shadow = null;
+  }
+  // « +25 » sous le total : il apparaît avec le décompte et reste affiché (on voit combien on a gagné)
+  if (t > GO_COUNT_T) {
+    const q = clamp((t - GO_COUNT_T) / 0.3, 0, 1);
+    progText.textSize = w * 0.05 * (1 + 0.25 * (1 - q)); progText.color = Color.argb(Math.round(255 * q), 255, 214, 60);
+    progText.setShadowLayer(w * 0.006, 0, w * 0.003, Color.argb(160, 0, 0, 0));
+    canvas.drawText(`+${earned}`, r.centerX(), r.bottom + w * 0.065, progText);
+    progText.shadow = null;
+  }
+  progText.color = Color.WHITE;
+}
+
+function drawPause(canvas) {
+  canvas.drawRect(0, 0, w, h, overlayPaint);
+  const y0 = h * 0.3;
+  textPaint.textSize = w * 0.12; canvas.drawText(tr('pause.title'), w / 2, y0, textPaint);
+  textPaint.textSize = w * 0.045; canvas.drawText(tr('common.score', { n: score }), w / 2, y0 + w * 0.09, textPaint);
+  const bh = w * 0.13, sh = w * 0.11;
+  let y = y0 + w * 0.17;
+  drawButton(canvas, new RectF(w * 0.2, y, w * 0.8, y + bh), tr('pause.resume'), primaryBtnPaint, w * 0.06, () => resumeGame());
+  y += bh + w * 0.04;
+  drawButton(canvas, new RectF(w * 0.2, y, w * 0.8, y + sh), '⚙️ ' + tr('hud.settings'), backBtnPaint, w * 0.045, () => openSettings());
+  y += sh + w * 0.03;
+  drawButton(canvas, new RectF(w * 0.2, y, w * 0.8, y + sh), tr('pause.quit'), dangerBtnPaint, w * 0.045, () => endGame(tr('pause.quit_reason')));
+}
+
+function settingRow(canvas, l, r, y, label, value, toggle, action) {
+  const rh = w * 0.12;
+  darkTextPaint.textAlign = Align.LEFT; darkTextPaint.textSize = w * 0.042;
+  canvas.drawText(fitText(label, darkTextPaint, value === null && toggle === null ? r - l : (r - l) * 0.55), l, y + rh * 0.6, darkTextPaint);
+  if (toggle !== null) {
+    const tw = w * 0.12, th = w * 0.065;
+    rect.set(r - tw, y + (rh - th) / 2, r, y + (rh + th) / 2);
+    progPaint.color = toggle ? Color.parseColor('#FF7A45') : Color.parseColor('#C9CED8');
+    canvas.drawRoundRect(rect, th / 2, th / 2, progPaint);
+    progPaint.color = Color.WHITE;
+    canvas.drawCircle(toggle ? rect.right - th / 2 : rect.left + th / 2, rect.centerY(), th * 0.4, progPaint);
+  } else if (value !== null) {
+    greyTextPaint.textAlign = Align.RIGHT; greyTextPaint.textSize = w * 0.04;
+    canvas.drawText(fitText(value, greyTextPaint, (r - l) * 0.5), r, y + rh * 0.6, greyTextPaint);
+    greyTextPaint.textAlign = Align.CENTER;
+  }
+  lockedPaint.alpha = 120;
+  canvas.drawRect(l, y + rh, r, y + rh + w * 0.003, lockedPaint);
+  lockedPaint.alpha = 255;
+  if (action) buttons.push({ rect: new RectF(l, y, r, y + rh), action });
+}
+
+function drawSettings(canvas) {
+  canvas.drawRect(0, 0, w, h, overlayPaint);
+  const left = w * 0.05, right = w * 0.95, ph = w * 1.42;
+  const top = Math.max(insetTop, (insetTop + ub()) / 2 - ph / 2), bottom = top + ph;
+  panel(canvas, left, top, right, bottom, '⚙️ ' + tr('settings.title'), () => { state = settingsReturnState; });
+  // 7 appuis sur le titre : menu de test caché (testmenu.js)
+  if (TEST_MENU) buttons.push({ rect: new RectF(w * 0.25, top + w * 0.03, w * 0.75, top + w * 0.14), action: () => testTitleTap() });
+  const l = left + w * 0.07, r = right - w * 0.07;
+  let y = top + w * 0.16;
+  settingRow(canvas, l, r, y, tr('settings.player'), (myName() || '—') + '  ✎', null, () => askPseudo(false));
+  y += w * 0.2;
+  const bh = w * 0.035;
+  sfxSlider.set(l, y + w * 0.06, r, y + w * 0.06 + bh);
+  drawSlider(canvas, sfxSlider, tr('settings.sfx'), sounds.soundVolume);
+  y += w * 0.19;
+  musicSlider.set(l, y + w * 0.06, r, y + w * 0.06 + bh);
+  drawSlider(canvas, musicSlider, tr('settings.music'), sounds.musicVolume);
+  y += w * 0.12;
+  if (navigator.vibrate) {
+    settingRow(canvas, l, r, y, '📳 ' + tr('settings.vibration_label'), null, profile.vibrationOn, () => { profile.vibrationOn = !profile.vibrationOn; if (profile.vibrationOn) vibrate(15); });
+    y += w * 0.12;
+  }
+  settingRow(canvas, l, r, y, '📺 ' + tr('settings.fake_ads_label'), null, profile.fakeAdsOn, () => { profile.fakeAdsOn = !profile.fakeAdsOn; });
+  y += w * 0.12;
+  const pref = profile.language;
+  const langLabel = pref === LANG_AUTO ? tr('settings.language_auto', { v: I18n.nameOf(I18n.lang) }) : I18n.nameOf(pref);
+  settingRow(canvas, l, r, y, '🌐 ' + tr('settings.language_label'), langLabel + '  ›', null, () => {
+    openLangPicker();
+  });
+  y += w * 0.12;
+  settingRow(canvas, l, r, y, 'ℹ️ ' + tr('settings.version', { v: 'Web ' + WEB_VERSION }), null, null, null);
+  drawButton(canvas, new RectF(w * 0.3, bottom - w * 0.16, w * 0.7, bottom - w * 0.05), 'OK', backBtnPaint, w * 0.05, () => { state = settingsReturnState; });
+}
