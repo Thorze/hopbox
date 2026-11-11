@@ -1,0 +1,56 @@
+/* Police « jeu » des textes en gras (Lilita One, licence OFL : fonts/OFL.txt) */
+@font-face { font-family: "Lilita One"; src: url("fonts/LilitaOne-Regular.ttf") format("truetype"); font-display: block; }
+/* Thème « Nuit & Or », le même que dans le jeu (UI dans js/screens.js) : panneaux bleu nuit, liseré doré */
+:root {
+  --bg: #FDE2C8;
+  --ink: #FFFFFF;
+  --accent: #3DBE4A;
+  --card: #1D2E5C;
+  --muted: #B9C5E6;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden; background: #0D1632;
+  overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+}
+#game { display: block; position: fixed; top: 0; left: 0; touch-action: none; box-shadow: 0 0 40px rgba(0, 0, 0, 0.25); }
+/* Sert à lire la taille de l'encoche et de la barre du bas (safe-area) */
+#safe-probe {
+  position: fixed; visibility: hidden; pointer-events: none;
+  padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+}
+#pseudo-dialog, #text-dialog, #error-box {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: none; align-items: center; justify-content: center;
+  background: rgba(6, 10, 26, 0.7); padding: 16px; z-index: 10;
+}
+#pseudo-dialog.open, #text-dialog.open { display: flex; }
+#text-input.code { text-transform: uppercase; letter-spacing: 0.2em; text-align: center; font-weight: 700; }
+.card {
+  width: 100%; max-width: 360px; color: var(--ink);
+  background: linear-gradient(#1D2E5C, #0D1632) padding-box, linear-gradient(#F7DE9C, #B2823A 55%, #F7DE9C) border-box;
+  border: 3px solid transparent; border-radius: 22px; padding: 20px; box-shadow: 0 10px 30px rgba(2, 5, 16, 0.6);
+}
+.card h2 { margin: 0 0 6px; font-size: 1.35rem; font-family: "Lilita One", system-ui, sans-serif; font-weight: 400; text-shadow: 0 2px 0 #0A1230; }
+.card p { margin: 0 0 14px; color: var(--muted); font-size: 0.95rem; }
+.card input {
+  width: 100%; font-size: 1.1rem; padding: 12px 14px; border-radius: 12px;
+  border: 2px solid rgba(132, 168, 240, 0.55); color: #fff; background: #121B3A; -webkit-user-select: text; user-select: text;
+}
+.card input::placeholder { color: #8490B6; }
+.card input:focus { outline: none; border-color: #FFD54F; }
+.actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+/* Boutons « bonbon » : dégradé, épaisseur dessous, texte ombré */
+.actions button {
+  font-family: "Lilita One", system-ui, sans-serif; font-size: 1.05rem; border: 0; border-radius: 999px; padding: 10px 24px;
+  background: linear-gradient(#5FD95A, #2FA63A); color: #fff; cursor: pointer; text-shadow: 0 2px 2px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 0 #1F7A2A, inset 0 2px 0 rgba(255, 255, 255, 0.35);
+}
+.actions button:active { transform: translateY(3px); box-shadow: 0 1px 0 #1F7A2A, inset 0 2px 0 rgba(255, 255, 255, 0.35); }
+.actions button.secondary { background: linear-gradient(#8492B4, #5A6788); box-shadow: 0 4px 0 #3D4764, inset 0 2px 0 rgba(255, 255, 255, 0.3); }
+.actions button.danger { background: linear-gradient(#FF6B6B, #D12F3A); box-shadow: 0 4px 0 #8A1C24, inset 0 2px 0 rgba(255, 255, 255, 0.3); }
+#error-box { display: none; z-index: 20; }
+#error-text {
+  white-space: pre-wrap; word-break: break-word; font-size: 0.75rem; max-height: 40vh; overflow: auto;
+  background: #121B3A; border-radius: 10px; padding: 10px; color: #FFD9B8; -webkit-user-select: text; user-select: text;
+}
