@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Hop Box</title>
+  <meta name="description" content="Maintiens appuyé pour sauter de plateforme en plateforme." data-i18n-content="web.description">
+  <meta name="theme-color" content="#FDE2C8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hop Box">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icone.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icone-180.png">
+  <link rel="stylesheet" href="style.css?v=e1b69214">
+</head>
+<body>
+  <canvas id="game" aria-label="Hop Box, jeu de saut" data-i18n-label="web.canvas_label"></canvas>
+  <div id="safe-probe"></div>
+
+  <div id="pseudo-dialog" role="dialog" aria-modal="true" aria-labelledby="pseudo-title">
+    <form id="pseudo-form" class="card">
+      <h2 id="pseudo-title"></h2>
+      <p id="pseudo-msg"></p>
+      <input id="pseudo-input" maxlength="16" autocomplete="nickname" autocapitalize="off" spellcheck="false" data-i18n-placeholder="pseudo.hint">
+      <div class="actions">
+        <button type="button" id="pseudo-cancel" class="secondary" data-i18n="common.cancel">Annuler</button>
+        <button type="submit">OK</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="text-dialog" role="dialog" aria-modal="true" aria-labelledby="text-title">
+    <form id="text-form" class="card">
+      <h2 id="text-title"></h2>
+      <p id="text-msg"></p>
+      <input id="text-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="actions">
+        <button type="button" id="text-cancel" class="secondary" data-i18n="common.cancel">Annuler</button>
+        <button type="submit" id="text-ok">OK</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="error-box">
+    <div class="card">
+      <h2 data-i18n="web.error_title">Oups, un problème</h2>
+      <p data-i18n="web.error_msg">Fais une capture d'écran de ce message et envoie-la pour que le bug soit corrigé.</p>
+      <pre id="error-text"></pre>
+      <div class="actions"><button type="button" onclick="location.reload()" data-i18n="web.reload">Recharger</button></div>
+    </div>
+  </div>
+
+  <script src="js/errors.js?v=e1b69214"></script>
+  <script src="js/i18n.js?v=e1b69214"></script>
+  <script src="js/gfx.js?v=e1b69214"></script>
+  <script src="js/difficulty.js?v=e1b69214"></script>
+  <script src="js/data.js?v=e1b69214"></script>
+  <script src="js/render.js?v=e1b69214"></script>
+  <script src="js/platform.js?v=e1b69214"></script>
+  <script src="js/island.js?v=e1b69214"></script>
+  <script src="js/space.js?v=e1b69214"></script>
+  <script src="js/idle.js?v=e1b69214"></script>
+  <script src="js/stats.js?v=e1b69214"></script>
+  <script src="js/ice.js?v=e1b69214"></script>
+  <script src="js/forest.js?v=e1b69214"></script>
+  <script src="js/heli.js?v=e1b69214"></script>
+  <script src="js/ufo.js?v=e1b69214"></script>
+  <script src="js/whale.js?v=e1b69214"></script>
+  <script src="js/polar.js?v=e1b69214"></script>
+  <script src="js/nuclear.js?v=e1b69214"></script>
+  <script src="js/daily.js?v=e1b69214"></script>
+  <script src="js/surprise.js?v=e1b69214"></script>
+  <script src="js/quest.js?v=e1b69214"></script>
+  <script src="js/duel.js?v=e1b69214"></script>
+  <script src="js/questchallenge.js?v=e1b69214"></script>
+  <script src="js/overheat.js?v=e1b69214"></script>
+  <script src="js/energygauge.js?v=e1b69214"></script>
+  <script src="js/questtheme.js?v=e1b69214"></script>
+  <script src="js/chapterheroes.js?v=e1b69214"></script>
+  <script src="js/mappaths.js?v=e1b69214"></script>
+  <script src="js/mapart.js?v=e1b69214"></script>
+  <script src="js/chapterthemes.js?v=e1b69214"></script>
+  <script src="js/chapterthemes2.js?v=e1b69214"></script>
+  <script src="js/chapterstory.js?v=e1b69214"></script>
+  <script src="js/storyfx.js?v=e1b69214"></script>
+  <script src="js/chapters.js?v=e1b69214"></script>
+  <script src="js/langpicker.js?v=e1b69214"></script>
+  <script src="js/layercache.js?v=e1b69214"></script>
+  <script src="js/goldblock.js?v=e1b69214"></script>
+  <script src="js/perfectfx.js?v=e1b69214"></script>
+  <script src="js/share.js?v=e1b69214"></script>
+  <script src="js/volcano.js?v=e1b69214"></script>
+  <script src="js/satellite.js?v=e1b69214"></script>
+  <script src="js/testmenu.js?v=e1b69214"></script>
+  <script src="js/bonus.js?v=e1b69214"></script>
+  <script src="js/character.js?v=e1b69214"></script>
+  <script src="js/specials.js?v=e1b69214"></script>
+  <script src="js/ads.js?v=e1b69214"></script>
+  <script src="js/progression.js?v=e1b69214"></script>
+  <script src="js/menus.js?v=e1b69214"></script>
+  <script src="js/zoompicker.js?v=e1b69214"></script>
+  <script src="js/homemenu.js?v=e1b69214"></script>
+  <script src="js/effects.js?v=e1b69214"></script>
+  <script src="js/screens.js?v=e1b69214"></script>
+  <script src="js/duels.js?v=e1b69214"></script>
+  <script src="js/sound.js?v=e1b69214"></script>
+  <script src="js/net.js?v=e1b69214"></script>
+  <script src="js/game.js?v=e1b69214"></script>
+  <script src="js/deathreplay.js?v=e1b69214"></script>
+  <script src="js/tutorial.js?v=e1b69214"></script>
+  <script src="js/freeenergy.js?v=e1b69214"></script>
+  <script src="js/ranking.js?v=e1b69214"></script>
+  <script src="js/guide.js?v=e1b69214"></script>
+  <script src="js/telemetry.js?v=e1b69214"></script>
+  <script src="js/main.js?v=e1b69214"></script>
+</body>
+</html>
