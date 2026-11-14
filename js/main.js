@@ -1,0 +1,105 @@
+'use strict';
+// Démarrage : canvas plein écran, boucle d'animation, toucher, pause en arrière-plan.
+
+const WEB_VERSION = '5.65.0';
+
+(async function main() {
+  Telemetry.init();   // mesure anonyme (telemetry.js)
+  // Charge la police « jeu » avant le premier dessin (sinon le canvas garde la police système) ; 2 s maxi
+  try { if (document.fonts) await Promise.race([document.fonts.load('40px "Lilita One"'), new Promise(r => setTimeout(r, 2000))]); } catch (e) { /* police système */ }
+  await I18n.loadAll();
+  I18n.use(profile.language);
+  const el = document.getElementById('game');
+  const ctx = el.getContext('2d');
+  const canvas = new Canvas(ctx);
+  const probe = document.getElementById('safe-probe');
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    // Sur ordinateur (écran large), le jeu garde un format portrait centré
+    const ch = window.innerHeight, cw = Math.min(window.innerWidth, Math.round(ch * 0.62));
+    el.width = Math.round(cw * dpr); el.height = Math.round(ch * dpr);
+    el.style.width = cw + 'px'; el.style.height = ch + 'px';
+    el.style.left = Math.round((window.innerWidth - cw) / 2) + 'px';
+    const cs = getComputedStyle(probe);
+    insetTop = (parseFloat(cs.paddingTop) || 0) * dpr;
+    insetBottom = (parseFloat(cs.paddingBottom) || 0) * dpr;
+    const first = w === 0;
+    if (first) onSizeChanged(el.width, el.height);
+    else { w = el.width; h = el.height; k = w / 9.5; scorePaint.textSize = w * 0.24; skyTop = 0; loadLook(); resetGameIfIdle(); }
+  }
+  function resetGameIfIdle() { if (state === State.READY && score === 0) resetGame(); else updateCameraTarget(); }
+
+  const pos = (e) => {
+    const r = el.getBoundingClientRect(), dpr = el.width / r.width;
+    return [(e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr];
+  };
+  let activePointer = null;
+  if (!window.PointerEvent) {
+    // Anciens iPhone (iOS 12 et avant) : pas d'événements « pointer », on utilise le toucher
+    const tpos = (t) => pos(t);
+    let touchId = null;
+    el.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (touchId !== null) return;
+      const t = e.changedTouches[0]; touchId = t.identifier;
+      const [x, y] = tpos(t); onPointerDown(x, y);
+    }, { passive: false });
+    el.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      for (const t of e.changedTouches) if (t.identifier === touchId) { const [x, y] = tpos(t); onPointerMove(x, y); }
+    }, { passive: false });
+    const tend = (e) => { for (const t of e.changedTouches) if (t.identifier === touchId) { touchId = null; onPointerUp(); } };
+    el.addEventListener('touchend', tend);
+    el.addEventListener('touchcancel', tend);
+    el.addEventListener('mousedown', (e) => { const [x, y] = pos(e); onPointerDown(x, y); });
+    window.addEventListener('mouseup', () => onPointerUp());
+  }
+  el.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (activePointer !== null) return;
+    activePointer = e.pointerId;
+    try { el.setPointerCapture(e.pointerId); } catch (err) { /* ignoré */ }
+    const [x, y] = pos(e); onPointerDown(x, y);
+  });
+  el.addEventListener('pointermove', (e) => { if (e.pointerId === activePointer) { const [x, y] = pos(e); onPointerMove(x, y); } });
+  const up = (e) => { if (e.pointerId !== activePointer) return; activePointer = null; onPointerUp(); };
+  el.addEventListener('pointerup', up);
+  el.addEventListener('pointercancel', up);
+  // Empêche le zoom, le défilement et le menu contextuel pendant le jeu
+  ['touchstart', 'touchmove', 'gesturestart', 'contextmenu'].forEach((t) => el.addEventListener(t, (e) => e.preventDefault(), { passive: false }));
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { pauseGame(); sounds.pause(); } else { lastFrame = 0; sounds.resume(); }
+  });
+  // Molette (ordinateur) : défilement du classement
+  el.addEventListener('wheel', (e) => {
+    const d = e.deltaY * (el.width / el.getBoundingClientRect().width);
+    // Liste qui défile dans l'écran affiché : elle glisse en douceur vers son but (scrolllist.js)
+    if (scrollWheel(d)) e.preventDefault();
+  }, { passive: false });
+  window.addEventListener('resize', resize);
+
+  resize();
+
+  function frame(ts) {
+    const dt = lastFrame === 0 ? 0 : clamp((ts - lastFrame) / 1000, 0, 0.05);
+    lastFrame = ts;
+    try {
+      update(dt);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      draw(canvas);
+    } catch (err) {
+      showError(err);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // Compte du navigateur : un joueur déjà connu du serveur retrouve son pseudo (1,5 s d'attente au plus)
+  await Promise.race([online.ensureSession(), new Promise((r) => setTimeout(r, 1500))]);
+  // Premier contact : aucun écran avant de jouer. Pseudo attribué d'office (proposé au changement après la première
+  // partie), puis directement une vraie partie avec les aides du débutant (assist.js). La boutique n'est plus imposée : la pastille rouge du menu suffit.
+  if (!profile.pseudo) autoPseudo();
+  syncOnline();
+})();
