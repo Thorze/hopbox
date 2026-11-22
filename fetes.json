@@ -1,0 +1,293 @@
+{
+ "v": 1,
+ "list": [
+  {
+   "id": "noel2026",
+   "key": "noel",
+   "start": "2026-12-01",
+   "end": "2026-12-24",
+   "until": "2027-01-06",
+   "theme": "hiver",
+   "themeEnd": "2027-01-06",
+   "calendar": [
+    {
+     "coins": 20
+    },
+    {
+     "coins": 20
+    },
+    {
+     "coins": 25
+    },
+    {
+     "coins": 25
+    },
+    {
+     "coins": 30
+    },
+    {
+     "item": "hat:bonnetnoel"
+    },
+    {
+     "coins": 30
+    },
+    {
+     "coins": 35
+    },
+    {
+     "coins": 35
+    },
+    {
+     "coins": 40
+    },
+    {
+     "coins": 40
+    },
+    {
+     "coins": 45
+    },
+    {
+     "item": "trail:flocons"
+    },
+    {
+     "coins": 45
+    },
+    {
+     "coins": 50
+    },
+    {
+     "coins": 50
+    },
+    {
+     "coins": 55
+    },
+    {
+     "coins": 60
+    },
+    {
+     "coins": 60
+    },
+    {
+     "item": "block:paindepice"
+    },
+    {
+     "coins": 70
+    },
+    {
+     "coins": 80
+    },
+    {
+     "coins": 100
+    },
+    {
+     "item": "character:lutin",
+     "challenge": {
+      "type": "streak",
+      "target": 5
+     }
+    }
+   ],
+   "shop": [
+    "character:renne"
+   ]
+  },
+  {
+   "id": "nouvelan2027",
+   "key": "nouvelan",
+   "start": "2026-12-31",
+   "end": "2027-01-02",
+   "theme": "feux",
+   "challenges": [
+    {
+     "type": "score",
+     "target": 60,
+     "reward": {
+      "item": "trail:feuartifice"
+     }
+    }
+   ]
+  },
+  {
+   "id": "lunaire2027",
+   "key": "lunaire",
+   "start": "2027-02-01",
+   "end": "2027-02-08",
+   "theme": "lunaire",
+   "hunt": {
+    "thing": "enveloppe",
+    "chance": 0.25,
+    "steps": [
+     {
+      "n": 10,
+      "reward": {
+       "coins": 88
+      }
+     },
+     {
+      "n": 20,
+      "reward": {
+       "item": "block:lanternes"
+      }
+     },
+     {
+      "n": 30,
+      "reward": {
+       "item": "character:liondanse"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "valentin2027",
+   "key": "valentin",
+   "start": "2027-02-09",
+   "end": "2027-02-14",
+   "theme": "valentin",
+   "hunt": {
+    "thing": "coeur",
+    "chance": 0.25,
+    "steps": [
+     {
+      "n": 10,
+      "reward": {
+       "coins": 50
+      }
+     },
+     {
+      "n": 20,
+      "reward": {
+       "item": "block:coeur"
+      }
+     },
+     {
+      "n": 30,
+      "reward": {
+       "coins": 150
+      }
+     }
+    ]
+   },
+   "shop": [
+    "back:cupidon"
+   ]
+  },
+  {
+   "id": "paques2027",
+   "key": "paques",
+   "start": "2027-03-20",
+   "end": "2027-04-04",
+   "theme": "paques",
+   "hunt": {
+    "thing": "oeuf",
+    "chance": 0.25,
+    "steps": [
+     {
+      "n": 10,
+      "reward": {
+       "coins": 50
+      }
+     },
+     {
+      "n": 20,
+      "reward": {
+       "item": "block:oeufs"
+      }
+     },
+     {
+      "n": 30,
+      "reward": {
+       "item": "character:lapin"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "halloween2027",
+   "key": "halloween",
+   "start": "2027-10-20",
+   "end": "2027-10-31",
+   "theme": "halloween",
+   "hunt": {
+    "thing": "bonbon",
+    "chance": 0.25,
+    "steps": [
+     {
+      "n": 10,
+      "reward": {
+       "coins": 50
+      }
+     },
+     {
+      "n": 20,
+      "reward": {
+       "item": "hat:sorciere"
+      }
+     },
+     {
+      "n": 30,
+      "reward": {
+       "item": "block:citrouille"
+      }
+     },
+     {
+      "n": 40,
+      "reward": {
+       "item": "trail:chauvesouris"
+      }
+     }
+    ]
+   },
+   "challenges": [
+    {
+     "type": "streak",
+     "target": 5,
+     "from": "2027-10-31",
+     "reward": {
+      "item": "character:jack"
+     }
+    }
+   ]
+  },
+  {
+   "id": "anniv2027",
+   "key": "anniv",
+   "start": "2027-11-21",
+   "end": "2027-11-27",
+   "theme": "anniv",
+   "calendar": [
+    {
+     "coins": 50
+    },
+    {
+     "coins": 60
+    },
+    {
+     "coins": 70
+    },
+    {
+     "coins": 80
+    },
+    {
+     "coins": 90
+    },
+    {
+     "coins": 100
+    },
+    {
+     "coins": 300
+    }
+   ],
+   "challenges": [
+    {
+     "type": "score",
+     "target": 50,
+     "reward": {
+      "item": "hat:fete"
+     }
+    }
+   ]
+  }
+ ]
+}
